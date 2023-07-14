@@ -9,19 +9,19 @@ import { defineStore } from 'pinia';
 
 
 export const useSocket = defineStore('socket', {
-	state: (): any => ({
+	state: () => ({
 		socketMsg: {},
 		socketMsgList: [],
 	}),
 
 	actions: {
-		setSocketMsg(data: Object) {
+		setSocketMsg(data) {
 			console.log("msg====>", data)
 			this.socketMsg = data;
 			this.socketMsgList.push(data)
 		},
 
-		setSocketMsgList(data: Array<any>) {
+		setSocketMsgList(data) {
 			this.socketMsgList = data
 		},
 
