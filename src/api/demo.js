@@ -30,4 +30,12 @@ export function getDiskDataApi() {
 }
 
 
+// cxl
+export function getCxlDataApi() {
+  return request({
+    url: `${PATH_PRE}/test/cxlData`,
+    method: 'get'
+  })
+}
+
 

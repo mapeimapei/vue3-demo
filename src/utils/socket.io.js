@@ -26,6 +26,15 @@ const socketEvents = {
         store[action](data)
     },
 
+
+    cxlOnlineData(res) {
+        let action = "setCxlOnlineData"
+        let data = res.data
+        const store = useSocket(pinia)
+        store[action](data)
+    },
+
+
     // 这是个测试
     dcenter(res) {
         console.log("dcenter ===> ", res)
@@ -44,11 +53,7 @@ const vueSocketOptions = {
             reconnection: true,
             reconnectionDelayMax:1000,
             reconnectionAttempts: 5, // 重连次数
-            forceNew: true,
-            // query: {
-            //     UID: "mapei_1",
-            //     token:"token1234"
-            // }
+            forceNew: true
         }
     ),
     // extraHeaders: {"Access-Control-Allow-Origin": '*'},

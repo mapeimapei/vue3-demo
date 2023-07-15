@@ -4,9 +4,46 @@
 
     <el-button type="primary" @click="getDiskData">getDiskData</el-button>
 
-    <p v-if="diskData.length">{{diskData[0]}}</p>
+    <el-button type="primary" @click="getCxlData">getCxlData</el-button>
 
-    <div id="peiBox" style="width: 100%; height: 300px; background-color: #dedede; margin-bottom: 20px; margin-top: 20px;"></div>
+
+    <p v-if="distCpu.length">{{distCpu[0]}}</p>
+
+    <div id="peiBox" style="width: 100%; height: 300px; background-color: #dedede; margin-bottom: 20px; margin-top: 20px;">
+      realCxlOnlineCpu:{{realCxlOnlineCpu}} <br />
+      realCxlOnlineGpu:{{realCxlOnlineGpu}} <br />
+
+      
+      realDisk.cup:{{realDisk.cup ? realDisk.cup.value : 0}} <br />
+      realDisk.gpu:{{realDisk.gpu ? realDisk.gpu.value : 0}} <br />
+
+
+      <div class="clx">
+        
+        <div class="item1 left" style="width: 200px; height: 200px;">
+            <mProgress 
+              :width="200" 
+              title="CPU" 
+              :ratio="realCxlOnlineCpu" 
+              :percentage="realCxlOnlineCpu" 
+              :inside-percentage="realDisk.cup ? realDisk.cup.value : 0"
+            ></mProgress>
+        </div>
+
+        <div class="item2 left" style="width: 200px; height: 200px;">
+            <mProgress 
+              :width="200" 
+              title="GPU" 
+              :ratio="realCxlOnlineGpu" 
+              :percentage="realCxlOnlineGpu" 
+              :inside-percentage="realDisk.gpu ? realDisk.gpu.value : 0"
+            ></mProgress>
+        </div>
+
+      </div>
+
+    
+    </div>
     
     <div id="lineBox" style="width: 100%; height: 300px; background-color: #dedede;"></div>
 
@@ -17,34 +54,23 @@
 </template>
 
 <script setup name="echart">
-import { getCurrentInstance,onMounted,ref,reactive,markRaw  } from 'vue'
+import { getCurrentInstance,onMounted,ref,reactive,markRaw,watch   } from 'vue'
 import * as echarts from 'echarts'
 import { ElButton,ElDatePicker } from 'element-plus'
-import { storeToRefs } from 'pinia';
-import { useSocket } from '@/stores/socket';
+import { storeToRefs } from 'pinia'
+import { useSocket } from '@/stores/socket'
+import mProgress from "@/components/m-progress.vue"
 
 const { proxy } =getCurrentInstance();
 
 const storesSocket = useSocket();
-const { diskData } = storeToRefs(storesSocket);
-
-
-const getDiskData =()=>{
-  storesSocket.getDiskData()
-
-}
-
-
-
-
-
-
+const { diskData,distCpu,distGpu,cxlOnlineData,cxlOnlineCpu,cxlOnlineGpu,realCxlOnlineCpu,realCxlOnlineGpu,step } = storeToRefs(storesSocket);
 
 
 const seriesData = ref(
   [
     {
-      name: 'CPU',
+      name: 'CXL-CPU',
       type: 'line',
       //stack: 'Total',
       smooth: true,
@@ -52,7 +78,7 @@ const seriesData = ref(
       data: []
     },
     {
-      name: 'GPU',
+      name: 'DISK-CPU',
       type: 'line',
       //stack: 'Total',
       smooth: true,
@@ -70,7 +96,7 @@ const option = reactive({
         trigger: 'axis'
       },
       legend: {
-        data: ['CPU', 'GPU']
+        data: ['CXL-CPU', 'DISK-CPU']
       },
       grid: {
         left: '3%',
@@ -114,13 +140,18 @@ const initLineChart = ()=>{
     )
   )
 
-  setInterval(()=> {
-    seriesData.value[0].data.push(Math.random() * 100)
-    //seriesData.value[1].data.push(Math.random() * 100)
-    lineChart.value.setOption({
-      series: seriesData.value
-    });
-  }, 1000);
+  // setInterval(()=> {
+  //   let obj = {
+  //     "timestamp":new Date().getTime(),
+  //     "value":Math.random() * 100
+  //   }
+
+  //   seriesData.value[0].data.push(obj)
+  //   //seriesData.value[1].data.push(Math.random() * 100)
+  //   lineChart.value.setOption({
+  //     series: seriesData.value
+  //   });
+  // }, 1000);
 
   if (option && typeof option === 'object') {
     lineChart.value.setOption(option);
@@ -130,6 +161,58 @@ const initLineChart = ()=>{
   window.addEventListener('resize', lineChart.value.resize);
 
 }
+
+
+const getDiskData = async ()=>{
+  await storesSocket.getDiskData()
+  if(!!distCpu.value.length){
+    seriesData.value[1].data = distCpu.value
+    lineChart.value.setOption({series: seriesData.value})
+  }
+}
+
+const getCxlData = async ()=>{
+  await storesSocket.getCxlData()
+}
+
+
+
+const realDisk = reactive({
+  cpu:null,
+  gpu:null,
+})
+
+
+const cpuRealDatafn =()=>{
+
+  // 这里的数据处理比较草率
+  realDisk.cup = distCpu.value[step.value]
+  realDisk.gpu = distGpu.value[step.value]
+
+
+
+  seriesData.value[0].data = cxlOnlineCpu.value
+  lineChart.value.setOption({series: seriesData.value})
+
+
+}
+
+
+
+
+
+watch(
+  cxlOnlineData,
+  (newVal, oldVal) => {
+    cpuRealDatafn()
+  },
+  {
+    //immediate: true,
+    deep: true
+  }
+)
+
+
 
 
 

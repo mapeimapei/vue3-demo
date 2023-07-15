@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { getDiskDataApi } from "@/api/demo"
+import { getDiskDataApi,getCxlDataApi } from "@/api/demo"
 import { ElLoading,ElMessage  } from 'element-plus'
 
 /**
@@ -15,12 +15,46 @@ export const useSocket = defineStore('socket', {
 		socketMsg: {},
 		socketMsgList: [],
 
+		step:null,
 
-		diskData:[]
+		cxlOnlineData:[],
+		cxlOnlineCpu:[],
+		cxlOnlineGpu:[],
+		realCxlOnlineCpu:null,
+		realCxlOnlineGpu:null,
+
+
+
+		diskData:[],
+		distCpu:[],
+		distGpu:[],
+
+
 	
 	}),
 
 	actions: {
+
+		
+
+		setCxlOnlineData(data) {
+			console.log("setCxlOnlineData====>", data)
+
+			this.cxlOnlineData.push(data)
+
+			this.realCxlOnlineCpu = data.cpu
+			this.realCxlOnlineGpu = data.gpu
+
+			this.cxlOnlineCpu.push(data.cpu)
+			this.cxlOnlineGpu.push(data.gpu)
+
+			this.step = data.step
+
+
+
+
+		},
+
 
 		setSocketMsg(data) {
 			console.log("msg====>", data)
@@ -36,6 +70,29 @@ export const useSocket = defineStore('socket', {
 			this.socketMsgList = []
 		},
 
+		setDiskData(data) {
+			data.forEach(item =>{
+				this.distCpu.push(
+					{
+						"timestamp":item.timestamp,
+						"step":item.step,
+						"value":item.cpu
+					}
+				)
+
+				this.distGpu.push(
+					{
+						"timestamp":item.timestamp,
+						"step":item.step,
+						"value":item.gpu
+					}
+				)
+
+			})
+		},
+
+
+
 		// 获取列表
 		getDiskData(data) {
 			const loading = ElLoading.service({
@@ -47,7 +104,8 @@ export const useSocket = defineStore('socket', {
 				getDiskDataApi(data).then((res)=>{
 					const {code,data} = res
 					this.diskData = data
-					console.log("this.diskData",this.diskData)
+					
+					this.setDiskData(data)
 					if(code === 20000){
 						resolve(res)
 					}else{
@@ -62,6 +120,34 @@ export const useSocket = defineStore('socket', {
 			});
 		},
 
+		// 获取列表
+		getCxlData(data) {
+			const loading = ElLoading.service({
+				lock: true,
+				text: 'Loading',
+				background: 'rgba(0, 0, 0, 0.7)',
+			})
+			return new Promise((resolve,reject) => {
+				getCxlDataApi(data).then((res)=>{
+					const {code,data} = res
+					this.diskData = data
+					
+					//this.setDiskData(data)
+					if(code === 20000){
+						resolve(res)
+					}else{
+						reject(res)
+					}
+				}).catch((err)=>{
+					console.log(err)
+					reject(err)
+				}).finally(()=>{
+					loading.close()
+				})
+			});
+		},
+
+		
 
 
 	}
