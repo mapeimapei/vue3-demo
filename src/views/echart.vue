@@ -4,23 +4,20 @@
 
     <el-button type="primary" @click="getDiskData">getDiskData</el-button>
 
-    <el-button type="primary" @click="getCxlData">getCxlData</el-button>
+    <el-button type="primary" :disabled="cxlOnlineData.length" @click="getCxlData">getCxlData</el-button>
 
 
-    <p v-if="distCpu.length">{{distCpu[0]}}</p>
+    <p>{{curlineType}}</p>
 
     <div id="peiBox" style="width: 100%; height: 300px; background-color: #dedede; margin-bottom: 20px; margin-top: 20px;">
       realCxlOnlineCpu:{{realCxlOnlineCpu}} <br />
       realCxlOnlineGpu:{{realCxlOnlineGpu}} <br />
 
-      
       realDisk.cup:{{realDisk.cup ? realDisk.cup.value : 0}} <br />
       realDisk.gpu:{{realDisk.gpu ? realDisk.gpu.value : 0}} <br />
 
-
       <div class="clx">
-        
-        <div class="item1 left" style="width: 200px; height: 200px;">
+        <div class="item1 left" style="width: 200px; height: 200px;" @click="setCurLineFn('cpu')">
             <mProgress 
               :width="200" 
               title="CPU" 
@@ -30,7 +27,7 @@
             ></mProgress>
         </div>
 
-        <div class="item2 left" style="width: 200px; height: 200px;">
+        <div class="item2 left" style="width: 200px; height: 200px;" @click="setCurLineFn('gpu')">
             <mProgress 
               :width="200" 
               title="GPU" 
@@ -45,10 +42,10 @@
     
     </div>
     
-    <div id="lineBox" style="width: 100%; height: 300px; background-color: #dedede;"></div>
+    <div id="lineBox" style="width: 100%; height: 300px; background-color: #dedede; margin-bottom: 20px;"></div>
 
 
-    
+    <decode-throughput />
    
    </div>
 </template>
@@ -61,6 +58,9 @@ import { storeToRefs } from 'pinia'
 import { useSocket } from '@/stores/socket'
 import mProgress from "@/components/m-progress.vue"
 
+
+import decodeThroughput from "./decode-throughput.vue"
+
 const { proxy } =getCurrentInstance();
 
 const storesSocket = useSocket();
@@ -70,7 +70,7 @@ const { diskData,distCpu,distGpu,cxlOnlineData,cxlOnlineCpu,cxlOnlineGpu,realCxl
 const seriesData = ref(
   [
     {
-      name: 'CXL-CPU',
+      name: 'CXL',
       type: 'line',
       //stack: 'Total',
       smooth: true,
@@ -78,7 +78,7 @@ const seriesData = ref(
       data: []
     },
     {
-      name: 'DISK-CPU',
+      name: 'Disk',
       type: 'line',
       //stack: 'Total',
       smooth: true,
@@ -96,7 +96,7 @@ const option = reactive({
         trigger: 'axis'
       },
       legend: {
-        data: ['CXL-CPU', 'DISK-CPU']
+        data: ['CXL', 'Disk']
       },
       grid: {
         left: '3%',
@@ -140,24 +140,10 @@ const initLineChart = ()=>{
     )
   )
 
-  // setInterval(()=> {
-  //   let obj = {
-  //     "timestamp":new Date().getTime(),
-  //     "value":Math.random() * 100
-  //   }
-
-  //   seriesData.value[0].data.push(obj)
-  //   //seriesData.value[1].data.push(Math.random() * 100)
-  //   lineChart.value.setOption({
-  //     series: seriesData.value
-  //   });
-  // }, 1000);
-
   if (option && typeof option === 'object') {
     lineChart.value.setOption(option);
   }
 
- 
   window.addEventListener('resize', lineChart.value.resize);
 
 }
@@ -166,6 +152,8 @@ const initLineChart = ()=>{
 const getDiskData = async ()=>{
   await storesSocket.getDiskData()
   if(!!distCpu.value.length){
+
+
     seriesData.value[1].data = distCpu.value
     lineChart.value.setOption({series: seriesData.value})
   }
@@ -175,36 +163,78 @@ const getCxlData = async ()=>{
   await storesSocket.getCxlData()
 }
 
-
-
 const realDisk = reactive({
   cpu:null,
   gpu:null,
 })
 
 
-const cpuRealDatafn =()=>{
-
-  // 这里的数据处理比较草率
-  realDisk.cup = distCpu.value[step.value]
-  realDisk.gpu = distGpu.value[step.value]
 
 
 
+const cpuRealDataFn =()=>{
   seriesData.value[0].data = cxlOnlineCpu.value
   lineChart.value.setOption({series: seriesData.value})
+}
 
-
+const gpuRealDataFn =()=>{
+  seriesData.value[0].data = cxlOnlineGpu.value
+  lineChart.value.setOption({series: seriesData.value})
 }
 
 
 
 
+const curlineType = ref('cpu')
+const setCurLineFn =(val)=>{
+  if(curlineType.value === val) return
+  curlineType.value = val
+
+  lineChart.value.clear()
+  option.series = []
+  lineChart.value.setOption(option)
+
+
+
+  if(curlineType.value ==='cpu'){
+
+    seriesData.value[1].data = distCpu.value
+    lineChart.value.setOption({series: seriesData.value})
+
+    cpuRealDataFn()
+  }else if(curlineType.value ==='gpu'){
+    seriesData.value[1].data = distGpu.value
+    lineChart.value.setOption({series: seriesData.value})
+    gpuRealDataFn()
+
+  }else{
+
+
+  }
+
+
+
+
+
+
+  
+
+
+
+}
+  
+
+const diskRealDataFn = ()=>{
+  // 这里的数据处理比较草率
+  realDisk.cup = distCpu.value[step.value]
+  realDisk.gpu = distGpu.value[step.value]
+}
 
 watch(
   cxlOnlineData,
   (newVal, oldVal) => {
-    cpuRealDatafn()
+    diskRealDataFn()
+    curlineType.value === 'cpu' && cpuRealDataFn()
   },
   {
     //immediate: true,
@@ -220,7 +250,6 @@ watch(
 onMounted(() => {
   initLineChart()
 })
-
 
 </script>
 

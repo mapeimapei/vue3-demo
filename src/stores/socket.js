@@ -15,6 +15,8 @@ export const useSocket = defineStore('socket', {
 		socketMsg: {},
 		socketMsgList: [],
 
+		decodeThroughput:null,
+
 		step:null,
 
 		cxlOnlineData:[],
@@ -35,6 +37,10 @@ export const useSocket = defineStore('socket', {
 
 	actions: {
 
+		setDecodeThroughput(data){
+			this.decodeThroughput = data
+
+		},
 		
 
 		setCxlOnlineData(data) {

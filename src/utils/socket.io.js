@@ -35,6 +35,13 @@ const socketEvents = {
     },
 
 
+    decodeThroughput(res) {
+        let action = "setDecodeThroughput"
+        let data = res.data
+        const store = useSocket(pinia)
+        store[action](data)
+    },
+
     // 这是个测试
     dcenter(res) {
         console.log("dcenter ===> ", res)

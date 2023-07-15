@@ -39,3 +39,14 @@ export function getCxlDataApi() {
 }
 
 
+// cxl
+export function getDecodeThroughputApi() {
+  return request({
+    url: `${PATH_PRE}/test/decodeThroughput`,
+    method: 'get'
+  })
+}
+
+
+
+
