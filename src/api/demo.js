@@ -19,3 +19,15 @@ export function getPostsApi() {
     method: 'get'
   })
 }
+
+
+// 获取diskData
+export function getDiskDataApi() {
+  return request({
+    url: `${PATH_PRE}/test/diskData`,
+    method: 'get'
+  })
+}
+
+
+
