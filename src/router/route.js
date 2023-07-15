@@ -27,6 +27,14 @@ export const staticRoutes = [
 		component: () => import('@/views/socket.vue'),
 	},
 
+	{
+		path: '/socket2',
+		meta: {
+			title: 'socket2',
+		},
+		name: "socket2",
+		component: () => import('@/views/socket2.vue'),
+	},
 
 
 	{

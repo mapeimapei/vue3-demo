@@ -1,7 +1,7 @@
 
 import {useSocket} from '@/stores/socket'
 import VueSocketIO from 'vue-3-socket.io'
-import io from 'socket.io-client'
+//import io from 'socket.io-client'
 import pinia from '@/stores/index'
 
 
@@ -42,6 +42,20 @@ const socketEvents = {
         store[action](data)
     },
 
+    data_response(data_type, data) {
+        let action = "setDataResponse"
+        
+        let res = {
+            data_type,
+            data
+        }
+        const store = useSocket(pinia)
+        store[action](res)
+    },
+    
+
+
+
     // 这是个测试
     dcenter(res) {
         console.log("dcenter ===> ", res)
@@ -51,7 +65,6 @@ const socketEvents = {
 // vueSocketIO配置参数
 const vueSocketOptions = {
     debug: false,
-    // @ts-ignore
     connection: io(
         import.meta.env.VITE_BASE_URL,  //http:自己的服务：端口
         {
@@ -143,8 +156,8 @@ class MySocketio {
     }
 
     // 发送消息
-    sendMsg(msg, event_name = 'SOCKET_MSG') {
-        this.socketio["io"].emit(event_name, msg);
+    sendMsg(msg, event_name = 'SOCKET_MSG', value=null) {
+        this.socketio["io"].emit(event_name, msg,value);
     }
 
     // 消息订阅

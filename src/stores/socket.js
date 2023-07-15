@@ -37,6 +37,14 @@ export const useSocket = defineStore('socket', {
 
 	actions: {
 
+
+		setDataResponse(data){
+
+			console.log("setDataResponse====>", data)
+
+		},
+
+
 		setDecodeThroughput(data){
 			this.decodeThroughput = data
 
