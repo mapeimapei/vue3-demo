@@ -62,7 +62,6 @@ export const useSocket = defineStore('socket', {
 				this.setDiskHistoryObj(data)
 			}else if(data_type === "live_progress_bar_value"){
 				this.live_progress_bar_value = data
-				console.log("2222",data)
 			}else if(data_type === "live_cxl_throughput_value"){
 				this.live_cxl_throughput_value = data
 			}else if(data_type === "disk_throughput_value"){

@@ -130,15 +130,18 @@ const clearLiveTimer = ()=>{
   storesSocket.clearState()
 }
 
-// 初始化，获取所有数据
-const getData = ()=>{
+// 获取历史数据
+const getHistoryData = ()=>{
   // Request HISTORY CXL data
   mySocketio.sendMsg('cxl_history','data_request')
   // Request HISTORY Disk data
   mySocketio.sendMsg('disk_history','data_request')
   // Request  DISK Throughput data
   mySocketio.sendMsg('disk_throughput_value','data_request')
+}
 
+// 获取实时数据
+const getOnlineData = ()=>{
   // Request ONLINE CXL data
   mySocketio.sendMsg('cxl_online','data_request')
   // Request live Progress data
@@ -155,6 +158,13 @@ const getData = ()=>{
     // Request Live CXL Throughput data
     mySocketio.sendMsg('live_cxl_throughput_value','data_request')
   },1000)
+}
+
+
+// 初始化，获取所有数据
+const getData = ()=>{
+  getHistoryData()
+  getOnlineData()
 }
 
 // 鼠标是否在折线上
@@ -202,7 +212,18 @@ const step = computed(()=>{
   return cxlState.value?.STEP || 0
 })
 
-// step需要一个监听-------------------------
+// 监听 checked-CXL 是否选择
+watch(
+  ()=> step.value,
+  (newVal, oldVal) => {
+    if(newVal < oldVal){
+      // 重新开始后，重新获取一次历史数据
+      console.log("new loop...")
+      getHistoryData()
+    }
+  }
+)
+
 
 // 计算属性 表盘上的disk值
 const diskState = computed(() => {
@@ -305,13 +326,13 @@ const initLineChart = ()=>{
   window.addEventListener('resize', lineChart.value.resize);
 }
 
-
 // 折线显示了数据类型 默认 GPU%
 const curlineType = ref('GPU%')
 const setCurLineFn =(val)=>{
   //if(curlineType.value === val) return
 }
 
+// 监听 cxl_online 数据 这里主要是为了 折线图的渲染
 watch(
   cxl_online,
   (newVal, oldVal) => {
@@ -319,7 +340,6 @@ watch(
     if(!checkedCXL.value){
       setLineSeriesDataFn()
     }
-    
   },
   {
     deep: true
