@@ -38,6 +38,9 @@
   <div class="desc fx fx-fdc fx-aic fx-jcc">
     <div class="title tc" v-if="props.title">{{props.title}}</div>
     <div class="ratio" v-if="props.ratio">{{props.ratio}}%</div>
+    <div class="tokens" v-if="props.tokens">{{props.tokens}}<em>TOKENS/S</em></div>
+
+    
   </div>
 
 
@@ -80,6 +83,12 @@ const props = defineProps({
     default: 0
   },
 
+  tokens:{
+    type:Number,
+    default: 0
+  },
+
+  
 
 
 })

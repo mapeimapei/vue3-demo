@@ -9,6 +9,7 @@
       <div class="clx">
         <div class="item1 left" style="width: 200px; height: 200px;" @click="setCurLineFn('GPU%')">
             <mProgress 
+              v-if="cxlState"
               :width="200" 
               title="GPU UTILIZATION" 
               :ratio="cxlState['GPU%']" 
@@ -19,6 +20,7 @@
 
         <div class="item2 left" style="width: 200px; height: 200px;" @click="setCurLineFn('GPUMEM%')">
             <mProgress 
+              v-if="cxlState"
               :width="200" 
               title="GPU MEM.UTILIZATION" 
               :ratio="cxlState['GPUMEM%']" 
@@ -29,6 +31,7 @@
 
         <div class="item1 left" style="width: 200px; height: 200px;" @click="setCurLineFn('CPU%')">
             <mProgress 
+              v-if="cxlState"
               :width="200" 
               title="CPU UTILIZATION" 
               :ratio="cxlState['CPU%']" 
@@ -39,6 +42,7 @@
 
         <div class="item2 left" style="width: 200px; height: 200px;" @click="setCurLineFn('MEM%')">
             <mProgress 
+              v-if="cxlState"
               :width="200" 
               title="MEM.UTILIZATION" 
               :ratio="cxlState['MEM%']" 
@@ -50,6 +54,7 @@
 
         <div class="item2 left" style="width: 200px; height: 200px;" @click="setCurLineFn('CXLMEM%')">
             <mProgress 
+              v-if="cxlState"
               :width="200" 
               title="CXL MEM.UTILIZATION" 
               :ratio="cxlState['CXLMEM%']" 
@@ -60,29 +65,43 @@
 
       </div>
     </div>
-    
+
+    <div class="progressBox">
+      <el-slider v-if="live_progress_bar_value" v-model="live_progress_bar_value['live_progress_bar_value_%']" />
+    </div>
+
     <div>
       <el-checkbox v-model="checkedCXL" label="CXL" />
       <el-checkbox v-model="checkedDisk" label="Disk" />
     </div>
 
-   12121  {{curlineType}}
+   
     <div id="lineBox" style="width: 100%; height: 300px; background-color: #dedede; margin-bottom: 20px;"></div>
 
 
-    <decode-throughput />
-   
+    <div class="throughput">
+      <div class="" style="width: 200px; height: 200px;">
+            <mProgress 
+              v-if="live_cxl_throughput_value"
+              :width="200" 
+              title="DECODE THROUGHPUT" 
+              :tokens= "live_cxl_throughput_value['live_cxl_throughput_value']"
+              :percentage="live_cxl_throughput_value['live_cxl_throughput_value%']" 
+              :inside-percentage="!!checkedDisk ? disk_throughput_value['disk_throughput_value%']:null"
+            ></mProgress>
+        </div>
+    </div>
+
    </div>
 </template>
 
 <script setup name="echart">
 import { getCurrentInstance,onMounted,ref,reactive,markRaw,watch,onBeforeUnmount,computed   } from 'vue'
 import * as echarts from 'echarts'
-import { ElButton,ElDatePicker,ElCheckbox } from 'element-plus'
+import { ElButton,ElDatePicker,ElCheckbox,ElSlider } from 'element-plus'
 import { storeToRefs } from 'pinia'
 import { useSocket } from '@/stores/socket'
 import mProgress from "@/components/m-progress.vue"
-import decodeThroughput from "./decode-throughput.vue"
 import mySocketio from "@/utils/socket.io"
 
 const { proxy } =getCurrentInstance()
@@ -95,12 +114,9 @@ const {
   live_progress_bar_value,
   live_cxl_throughput_value,
   disk_throughput_value,
-
   cxl_online_obj,
   cxl_history_obj,
   disk_history_obj
-
-
 } = storeToRefs(storesSocket)
 
 
@@ -241,7 +257,11 @@ const option = reactive({
         trigger: 'axis'
       },
       legend: {
-        data: ['CXL', 'Disk']
+        data: ['CXL', 'Disk'],
+        selected: {
+          'CXL':true,
+          'Disk':false,
+        }
       },
       grid: {
         left: '3%',
@@ -249,11 +269,6 @@ const option = reactive({
         bottom: '3%',
         containLabel: true
       },
-      // toolbox: {
-      //   feature: {
-      //     saveAsImage: {}
-      //   }
-      // },
       xAxis: {
         type: 'category',
         boundaryGap: false,
@@ -307,38 +322,42 @@ watch(
     
   },
   {
-    //immediate: true,
     deep: true
   }
 )
 
+// 监听 checked-CXL 是否选择
 watch(
   ()=> checkedCXL.value,
   (newVal, oldVal) => {
-    console.log(22)
     if(!!checkedCXL.value){
       seriesData.value[0].data = cxl_history_obj.value[curlineType.value]
-      lineChart.value.setOption({series: seriesData.value})
     }else{
       // 这里不用写代码 因为  setLineSeriesDataFn 会自动执行
     }
+
+    lineChart.value.setOption({series: seriesData.value})
   }
 )
 
+// 监听 checked-disk 是否选择
 watch(
   ()=> checkedDisk.value,
   (newVal, oldVal) => {
-    console.log(11)
     if(!!checkedDisk.value){
       seriesData.value[1].data = disk_history_obj.value[curlineType.value]
-      lineChart.value.setOption({series: seriesData.value})
     }else{
       seriesData.value[1].data = []
-      lineChart.value.setOption({series: seriesData.value})
     }
+
+    lineChart.value.clear()
+    option.legend.selected = {
+      'CXL':true, //CXL 永远都会选择
+      'Disk':checkedDisk.value,
+    }
+    lineChart.value.setOption(option)
   }
 )
-
 
 const setLineSeriesDataFn =()=>{
   seriesData.value[0].data = cxl_online_obj.value[curlineType.value]
@@ -346,8 +365,8 @@ const setLineSeriesDataFn =()=>{
 }
 
 onMounted(() => {
-  // getData()
-  initLineChart()
+  getData() //获取数据
+  initLineChart() // 初始化折线图
 })
 
 onBeforeUnmount(() => {
