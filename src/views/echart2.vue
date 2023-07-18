@@ -66,7 +66,7 @@
       <el-checkbox v-model="checkedDisk" label="Disk" />
     </div>
 
-
+   12121  {{curlineType}}
     <div id="lineBox" style="width: 100%; height: 300px; background-color: #dedede; margin-bottom: 20px;"></div>
 
 
@@ -87,11 +87,128 @@ import mySocketio from "@/utils/socket.io"
 
 const { proxy } =getCurrentInstance()
 
-
-
 const storesSocket = useSocket()
-const {cxl_online, cxl_history, disk_history,live_progress_bar_value,live_cxl_throughput_value,disk_throughput_value  } = storeToRefs(storesSocket)
+const {
+  cxl_online, 
+  cxl_history, 
+  disk_history,
+  live_progress_bar_value,
+  live_cxl_throughput_value,
+  disk_throughput_value,
 
+  cxl_online_obj,
+  cxl_history_obj,
+  disk_history_obj
+
+
+} = storeToRefs(storesSocket)
+
+
+// 实时数据定时器
+const liveTimer = ref()
+// 清除定时器
+const clearLiveTimer = ()=>{
+  clearInterval(liveTimer.value)
+  liveTimer.value = null
+  //将store中的数据也清空掉
+  storesSocket.clearState()
+}
+
+// 初始化，获取所有数据
+const getData = ()=>{
+  // Request HISTORY CXL data
+  mySocketio.sendMsg('cxl_history','data_request')
+  // Request HISTORY Disk data
+  mySocketio.sendMsg('disk_history','data_request')
+  // Request  DISK Throughput data
+  mySocketio.sendMsg('disk_throughput_value','data_request')
+
+  // Request ONLINE CXL data
+  mySocketio.sendMsg('cxl_online','data_request')
+  // Request live Progress data
+  mySocketio.sendMsg('live_progress_bar_value','data_request')
+  // Request Live CXL Throughput data
+  mySocketio.sendMsg('live_cxl_throughput_value','data_request')
+  
+  // 三个实时数据需要一秒请求一次
+  liveTimer.value = setInterval(()=>{
+    // Request ONLINE CXL data
+    mySocketio.sendMsg('cxl_online','data_request')
+    // Request live Progress data
+    mySocketio.sendMsg('live_progress_bar_value','data_request')
+    // Request Live CXL Throughput data
+    mySocketio.sendMsg('live_cxl_throughput_value','data_request')
+  },1000)
+}
+
+// 鼠标是否在折线上
+const isHover = ref(false)
+
+// 这是2个复选框
+const checkedCXL = ref(false)
+const checkedDisk = ref(false)
+
+const defaultState = {
+		"CPU%": 0,
+		"MEM%": 0,
+		"GPU%": 0,
+		"GPUMEM%": 0,
+		"CXLMEM%": 0,
+		"PCI_TX_MBps": 0,
+		"PCI_RX_MBps": 0,
+		"PRODUCT": "",
+		"PCI_INFO": "",
+		"GPUMEM_USED_MB": 0,
+		"GPUMEM_TOTAL_MB": 0,
+		"STEP": 0
+}
+
+// 计算属性 表盘上的cxl值
+const cxlState = computed(() => {
+  let val = defaultState
+  if(!!isHover.value){
+    // 鼠标在折线上 
+
+  }else if(!checkedCXL.value){
+    // cxl 未勾选 则显示 online 数据
+    if(cxl_online.value.length > 0 ){
+      val = cxl_online.value.at(-1)
+    }
+  }else{
+    // cxl 勾选 则显示 history 数据
+    val = cxl_history.value.at(-1)
+  }
+  return val
+})
+
+// 获取 step 
+const step = computed(()=>{
+  return cxlState.value?.STEP || 0
+})
+
+// step需要一个监听-------------------------
+
+// 计算属性 表盘上的disk值
+const diskState = computed(() => {
+
+  let val = defaultState
+  if(!!isHover.value){
+    // 鼠标在折线上 
+
+
+  }else if(!!checkedDisk.value){
+    // disk 勾选 则显示 history 数据的历史数据
+    if(disk_history.value.length > 0 && disk_history.value.length > step.value){
+      // 当数组长度大于 step 则显示第 step 个
+      val = disk_history.value[step.value]
+    }else if(disk_history.value.length < step.value) {
+      // 当数组长度小于 step 则显示最后一个
+      val = disk_history.value.at(-1)
+    }
+  }
+
+  return val
+})
 
 // 折线 option.series
 const seriesData = ref(
@@ -173,123 +290,64 @@ const initLineChart = ()=>{
   window.addEventListener('resize', lineChart.value.resize);
 }
 
-// 实时数据定时器
-const liveTimer = ref()
-// 清除定时器
-const clearLiveTimer = ()=>{
-  clearInterval(clearLiveTimer.value)
-  clearLiveTimer.value = null
-  //将store中的数据也清空掉
-  storesSocket.clearState()
-}
-
-// 初始化，获取所有数据
-const getData = ()=>{
-  // Request HISTORY CXL data
-  mySocketio.sendMsg('cxl_history','data_request')
-  // Request HISTORY Disk data
-  mySocketio.sendMsg('disk_history','data_request')
-  // Request  DISK Throughput data
-  mySocketio.sendMsg('disk_throughput_value','data_request')
-
-  // Request ONLINE CXL data
-  mySocketio.sendMsg('cxl_online','data_request')
-  // Request live Progress data
-  mySocketio.sendMsg('live_progress_bar_value','data_request')
-  // Request Live CXL Throughput data
-  mySocketio.sendMsg('live_cxl_throughput_value','data_request')
-  
-  // 三个实时数据需要一秒请求一次
-  clearLiveTimer.value = setInterval(()=>{
-    // Request ONLINE CXL data
-    mySocketio.sendMsg('cxl_online','data_request')
-    // Request live Progress data
-    mySocketio.sendMsg('live_progress_bar_value','data_request')
-    // Request Live CXL Throughput data
-    mySocketio.sendMsg('live_cxl_throughput_value','data_request')
-  },1000)
-}
-
-// 鼠标是否在折线上
-const isHover = ref(false)
-
-// 这是2个复选框
-const checkedCXL = ref(false)
-const checkedDisk = ref(false)
-
-
-const defaultState = {
-		"CPU%": 0,
-		"MEM%": 0,
-		"GPU%": 0,
-		"GPUMEM%": 0,
-		"CXLMEM%": 0,
-		"PCI_TX_MBps": 0,
-		"PCI_RX_MBps": 0,
-		"PRODUCT": "",
-		"PCI_INFO": "",
-		"GPUMEM_USED_MB": 0,
-		"GPUMEM_TOTAL_MB": 0,
-		"STEP": 0
-}
-
-// 计算属性 表盘上的cxl值
-const cxlState = computed(() => {
-  let val = defaultState
-  if(!!isHover.value){
-    // 鼠标在折线上 
-
-  }else if(!checkedCXL.value){
-    // cxl 未勾选 则显示 online 数据
-    if(cxl_online.value.length > 0 ){
-      val = cxl_online.value.at(-1)
-    }
-  }else{
-    // cxl 勾选 则显示 history 数据
-    val = cxl_history.value.at(-1)
-  }
-  return val
-})
-
-// 获取 step 
-const step = computed(()=>{
-  return cxlState.value?.STEP || 0
-})
-
-
-// 计算属性 表盘上的disk值
-const diskState = computed(() => {
-
-  let val = defaultState
-  if(!!isHover.value){
-    // 鼠标在折线上 
-
-
-  }else if(!!checkedDisk.value){
-    // disk 勾选 则显示 history 数据的历史数据
-    if(disk_history.value.length > 0 && disk_history.value.length > step.value){
-      // 当数组长度大于 step 则显示第 step 个
-      val = disk_history.value[step.value]
-    }else if(disk_history.value.length < step.value) {
-      // 当数组长度小于 step 则显示最后一个
-      val = disk_history.value.at(-1)
-    }
-  }
-
-  return val
-})
 
 // 折线显示了数据类型 默认 GPU%
 const curlineType = ref('GPU%')
 const setCurLineFn =(val)=>{
-  if(curlineType.value === val) return
-
+  //if(curlineType.value === val) return
 }
 
+watch(
+  cxl_online,
+  (newVal, oldVal) => {
+    console.log(111)
+    if(!checkedCXL.value){
+      setLineSeriesDataFn()
+    }
+    
+  },
+  {
+    //immediate: true,
+    deep: true
+  }
+)
 
+watch(
+  ()=> checkedCXL.value,
+  (newVal, oldVal) => {
+    console.log(22)
+    if(!!checkedCXL.value){
+      seriesData.value[0].data = cxl_history_obj.value[curlineType.value]
+      lineChart.value.setOption({series: seriesData.value})
+    }else{
+      // 这里不用写代码 因为  setLineSeriesDataFn 会自动执行
+    }
+  }
+)
+
+watch(
+  ()=> checkedDisk.value,
+  (newVal, oldVal) => {
+    console.log(11)
+    if(!!checkedDisk.value){
+      seriesData.value[1].data = disk_history_obj.value[curlineType.value]
+      lineChart.value.setOption({series: seriesData.value})
+    }else{
+      seriesData.value[1].data = []
+      lineChart.value.setOption({series: seriesData.value})
+    }
+  }
+)
+
+
+const setLineSeriesDataFn =()=>{
+  seriesData.value[0].data = cxl_online_obj.value[curlineType.value]
+  lineChart.value.setOption({series: seriesData.value})
+}
 
 onMounted(() => {
   // getData()
+  initLineChart()
 })
 
 onBeforeUnmount(() => {
