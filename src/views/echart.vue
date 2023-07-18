@@ -27,6 +27,10 @@
             ></mProgress>
         </div>
 
+
+
+
+
         <div class="item2 left" style="width: 200px; height: 200px;" @click="setCurLineFn('gpu')">
             <mProgress 
               :width="200" 
@@ -42,6 +46,14 @@
     
     </div>
     
+
+
+    <div>
+      <el-checkbox v-model="checkedCXL" label="CXL" />
+      <el-checkbox v-model="checkedDisk" label="Disk" />
+    </div>
+
+
     <div id="lineBox" style="width: 100%; height: 300px; background-color: #dedede; margin-bottom: 20px;"></div>
 
 
@@ -53,7 +65,7 @@
 <script setup name="echart">
 import { getCurrentInstance,onMounted,ref,reactive,markRaw,watch   } from 'vue'
 import * as echarts from 'echarts'
-import { ElButton,ElDatePicker } from 'element-plus'
+import { ElButton,ElDatePicker,ElCheckbox } from 'element-plus'
 import { storeToRefs } from 'pinia'
 import { useSocket } from '@/stores/socket'
 import mProgress from "@/components/m-progress.vue"
@@ -65,6 +77,11 @@ const { proxy } =getCurrentInstance();
 
 const storesSocket = useSocket();
 const { diskData,distCpu,distGpu,cxlOnlineData,cxlOnlineCpu,cxlOnlineGpu,realCxlOnlineCpu,realCxlOnlineGpu,step } = storeToRefs(storesSocket);
+
+
+
+const checkedCXL = ref(false)
+const checkedDisk = ref(false)
 
 
 const seriesData = ref(

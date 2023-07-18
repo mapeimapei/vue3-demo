@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
-import { getDiskDataApi,getCxlDataApi } from "@/api/demo"
-import { ElLoading,ElMessage  } from 'element-plus'
+
+
 
 /**
  * socket 
@@ -12,158 +12,44 @@ import { ElLoading,ElMessage  } from 'element-plus'
 
 export const useSocket = defineStore('socket', {
 	state: () => ({
-		socketMsg: {},
-		socketMsgList: [],
-
-		decodeThroughput:null,
-
-		step:null,
-
-		cxlOnlineData:[],
-		cxlOnlineCpu:[],
-		cxlOnlineGpu:[],
-		realCxlOnlineCpu:null,
-		realCxlOnlineGpu:null,
-
-
-
-		diskData:[],
-		distCpu:[],
-		distGpu:[],
-
-
-	
+		cxl_online:[],
+		cxl_history:[],
+		disk_history:[],
+		live_progress_bar_value:null,
+		live_cxl_throughput_value:null,
+		disk_throughput_value:null,
 	}),
 
 	actions: {
+		setDataResponse(res){
+			const data_type = res[0]
+			const data = JSON.parse(res[1])
+			if(data_type === "cxl_online" ){
+				this.cxl_online = data
+			}else if(data_type === "cxl_history"){
+				this.cxl_history = data
+			}else if(data_type === "disk_history"){
+				this.disk_history = data
+			}else if(data_type === "live_progress_bar_value"){
+				this.live_progress_bar_value = data
 
-
-		setDataResponse(data){
-
-			console.log("setDataResponse====>", data)
-
+			}else if(data_type === "live_cxl_throughput_value"){
+				this.live_cxl_throughput_value = data
+			}else if(data_type === "disk_throughput_value"){
+				this.disk_throughput_value = data
+			}else{
+				console.log(res)
+			}
 		},
 
-
-		setDecodeThroughput(data){
-			this.decodeThroughput = data
-
-		},
-		
-
-		setCxlOnlineData(data) {
-			console.log("setCxlOnlineData====>", data)
-
-			this.cxlOnlineData.push(data)
-
-			this.realCxlOnlineCpu = data.cpu
-			this.realCxlOnlineGpu = data.gpu
-
-			this.cxlOnlineCpu.push(data.cpu)
-			this.cxlOnlineGpu.push(data.gpu)
-
-			this.step = data.step
-
-
-
-
-		},
-
-
-		setSocketMsg(data) {
-			console.log("msg====>", data)
-			this.socketMsg = data;
-			this.socketMsgList.push(data)
-		},
-
-		setSocketMsgList(data) {
-			this.socketMsgList = data
-		},
-		clearMsg() {
-			this.socketMsg = {}
-			this.socketMsgList = []
-		},
-
-		setDiskData(data) {
-			data.forEach(item =>{
-				this.distCpu.push(
-					{
-						"timestamp":item.timestamp,
-						"step":item.step,
-						"value":item.cpu
-					}
-				)
-
-				this.distGpu.push(
-					{
-						"timestamp":item.timestamp,
-						"step":item.step,
-						"value":item.gpu
-					}
-				)
-
-			})
-		},
-
-
-
-		// 获取列表
-		getDiskData(data) {
-			const loading = ElLoading.service({
-				lock: true,
-				text: 'Loading',
-				background: 'rgba(0, 0, 0, 0.7)',
-			})
-			return new Promise((resolve,reject) => {
-				getDiskDataApi(data).then((res)=>{
-					const {code,data} = res
-					this.diskData = data
-					
-					this.setDiskData(data)
-					if(code === 20000){
-						resolve(res)
-					}else{
-						reject(res)
-					}
-				}).catch((err)=>{
-					console.log(err)
-					reject(err)
-				}).finally(()=>{
-					loading.close()
-				})
-			});
-		},
-
-		// 获取列表
-		getCxlData(data) {
-			const loading = ElLoading.service({
-				lock: true,
-				text: 'Loading',
-				background: 'rgba(0, 0, 0, 0.7)',
-			})
-			return new Promise((resolve,reject) => {
-				getCxlDataApi(data).then((res)=>{
-					const {code,data} = res
-					this.diskData = data
-					
-					//this.setDiskData(data)
-					if(code === 20000){
-						resolve(res)
-					}else{
-						reject(res)
-					}
-				}).catch((err)=>{
-					console.log(err)
-					reject(err)
-				}).finally(()=>{
-					loading.close()
-				})
-			});
-		},
-
-		
-
-
+		clearState(){
+			this.cxl_online = []
+			this.cxl_history = []
+			this.disk_history = []
+			this.live_progress_bar_value = null
+			this.live_cxl_throughput_value = null
+			this.disk_throughput_value = null
+		}
 	}
 });
 

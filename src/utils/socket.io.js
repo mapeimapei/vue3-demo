@@ -1,65 +1,19 @@
 
 import {useSocket} from '@/stores/socket'
 import VueSocketIO from 'vue-3-socket.io'
-//import io from 'socket.io-client'
 import pinia from '@/stores/index'
 
 
-// 后端推送的消息体
-// interface IMsgRes {
-//     module?: string, // 对应store的模块
-//     action?: string, //  action方法
-//     data: IMsg //消息体
-// }
-
-
-
 // 默认订阅的事件
-// 和后端默认的event_name是SOCKET_MSG，可以自行修改，或扩展新event_name
+
 const socketEvents = {
-    // socket 消息处理，默认由 useSocket中的setSocketMsg进行处理
-    // 也可以和后端对齐，传入module、action，使用对应module下的action处理消息
-    SOCKET_MSG(res) {
-        let action = res.action || "setSocketMsg"
-        let data = res.data
-        const store = useSocket(pinia)
-        store[action](data)
-    },
 
-
-    cxlOnlineData(res) {
-        let action = "setCxlOnlineData"
-        let data = res.data
-        const store = useSocket(pinia)
-        store[action](data)
-    },
-
-
-    decodeThroughput(res) {
-        let action = "setDecodeThroughput"
-        let data = res.data
-        const store = useSocket(pinia)
-        store[action](data)
-    },
-
-    data_response(data_type, data) {
+    data_response(res) {
         let action = "setDataResponse"
-        
-        let res = {
-            data_type,
-            data
-        }
         const store = useSocket(pinia)
         store[action](res)
-    },
-    
+    }
 
-
-
-    // 这是个测试
-    dcenter(res) {
-        console.log("dcenter ===> ", res)
-    },
 }
 
 // vueSocketIO配置参数

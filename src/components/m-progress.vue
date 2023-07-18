@@ -77,7 +77,7 @@ const props = defineProps({
 
   insidePercentage:{
     type:Number,
-    default:0
+    default: 0
   },
 
 

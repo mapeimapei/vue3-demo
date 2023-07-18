@@ -56,6 +56,14 @@ export const staticRoutes = [
 		component: () => import('@/views/echart.vue'),
 	},
 
+	{
+		path: '/echart2',
+		meta: {
+			title: 'echart2',
+		},
+		name: "echart2",
+		component: () => import('@/views/echart2.vue'),
+	},
 
 	{
 		path: "/:catchAll(.*)", // 不识别的path自动匹配404

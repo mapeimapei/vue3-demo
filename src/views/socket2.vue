@@ -4,6 +4,11 @@
     
     <el-button @click="get_cxl_history_data" type="primary">get_cxl_history_data</el-button>
 
+
+    <el-button @click="cxl_online" type="primary">cxl_online</el-button>
+    
+
+
   </div>
 </template>
 
@@ -32,6 +37,13 @@ const get_cxl_history_data = ()=>{
   mySocketio.sendMsg('cxl_history','data_request');
 
 }
+
+
+const cxl_online = ()=>{
+  mySocketio.sendMsg('cxl_online','data_request');
+
+}
+
 
 
 
