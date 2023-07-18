@@ -7,7 +7,7 @@
     <div id="peiBox" style="width: 100%; height: 300px; background-color: #dedede; margin-bottom: 20px; margin-top: 20px;">
 
       <div class="clx">
-        <div class="item1 left" style="width: 200px; height: 200px;" @click="setCurLineFn('GPU%')">
+        <div class="item1 left" style="width: 200px; height: 200px;" @click="setCurLineParam('GPU%')">
             <mProgress 
               v-if="cxlState"
               :width="200" 
@@ -18,7 +18,7 @@
             ></mProgress>
         </div>
 
-        <div class="item2 left" style="width: 200px; height: 200px;" @click="setCurLineFn('GPUMEM%')">
+        <div class="item2 left" style="width: 200px; height: 200px;" @click="setCurLineParam('GPUMEM%')">
             <mProgress 
               v-if="cxlState"
               :width="200" 
@@ -29,7 +29,7 @@
             ></mProgress>
         </div>
 
-        <div class="item1 left" style="width: 200px; height: 200px;" @click="setCurLineFn('CPU%')">
+        <div class="item1 left" style="width: 200px; height: 200px;" @click="setCurLineParam('CPU%')">
             <mProgress 
               v-if="cxlState"
               :width="200" 
@@ -40,7 +40,7 @@
             ></mProgress>
         </div>
 
-        <div class="item2 left" style="width: 200px; height: 200px;" @click="setCurLineFn('MEM%')">
+        <div class="item2 left" style="width: 200px; height: 200px;" @click="setCurLineParam('MEM%')">
             <mProgress 
               v-if="cxlState"
               :width="200" 
@@ -52,7 +52,7 @@
         </div>
 
 
-        <div class="item2 left" style="width: 200px; height: 200px;" @click="setCurLineFn('CXLMEM%')">
+        <div class="item2 left" style="width: 200px; height: 200px;" @click="setCurLineParam('CXLMEM%')">
             <mProgress 
               v-if="cxlState"
               :width="200" 
@@ -212,7 +212,7 @@ const step = computed(()=>{
   return cxlState.value?.STEP || 0
 })
 
-// 监听 checked-CXL 是否选择
+// 监听 step 判断是否新的迭代开始
 watch(
   ()=> step.value,
   (newVal, oldVal) => {
@@ -328,17 +328,39 @@ const initLineChart = ()=>{
 
 // 折线显示了数据类型 默认 GPU%
 const curlineType = ref('GPU%')
-const setCurLineFn =(val)=>{
-  //if(curlineType.value === val) return
+
+// 点击表盘切换折线
+const setCurLineParam =(val)=>{
+  if(curlineType.value === val) return 
+  curlineType.value = val
+  
+  if(!checkedCXL.value){
+    seriesData.value[0].data = cxl_online_obj.value[curlineType.value]
+  }else{
+    seriesData.value[0].data = cxl_history_obj.value[curlineType.value]
+  }
+
+  if(!!checkedDisk.value){
+    seriesData.value[1].data = disk_history_obj.value[curlineType.value]
+  }else{
+    seriesData.value[1].data = []
+  }
+
+  lineChart.value.clear()
+  option.legend.selected = {
+    'CXL':true, //CXL 永远都会选择
+    'Disk':checkedDisk.value,
+  }
+  lineChart.value.setOption(option)
 }
 
 // 监听 cxl_online 数据 这里主要是为了 折线图的渲染
 watch(
   cxl_online,
   (newVal, oldVal) => {
-    console.log(111)
     if(!checkedCXL.value){
-      setLineSeriesDataFn()
+      seriesData.value[0].data = cxl_online_obj.value[curlineType.value]
+      lineChart.value.setOption({series: seriesData.value})
     }
   },
   {
@@ -353,7 +375,7 @@ watch(
     if(!!checkedCXL.value){
       seriesData.value[0].data = cxl_history_obj.value[curlineType.value]
     }else{
-      // 这里不用写代码 因为  setLineSeriesDataFn 会自动执行
+      // 这里不用写代码 因为在监听 cxl_online 实时更新
     }
 
     lineChart.value.setOption({series: seriesData.value})
@@ -379,10 +401,6 @@ watch(
   }
 )
 
-const setLineSeriesDataFn =()=>{
-  seriesData.value[0].data = cxl_online_obj.value[curlineType.value]
-  lineChart.value.setOption({series: seriesData.value})
-}
 
 onMounted(() => {
   getData() //获取数据
