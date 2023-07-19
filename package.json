@@ -16,7 +16,7 @@
     "pinia": "^2.0.16",
     "sass": "1.54.4",
     "sass-loader": "^13.0.2",
-    "socket.io-client": "^4.7.1",
+    "terser": "^5.19.1",
     "unplugin-element-plus": "^0.7.2",
     "vue": "^3.2.41",
     "vue-3-socket.io": "^1.0.5",

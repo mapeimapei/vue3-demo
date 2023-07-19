@@ -2,6 +2,7 @@ import vue from '@vitejs/plugin-vue';
 import { resolve } from 'path';
 import { defineConfig, loadEnv } from 'vite';
 import ElementPlus from 'unplugin-element-plus/vite'
+import viteConfitExtend from "./vite.config.extend.js";
 
 
 const pathResolve = (dir) => {
@@ -21,13 +22,17 @@ const alias = {
 
 export default defineConfig((mode) => {
 	const env = loadEnv(mode.mode, process.cwd());
-	// mode ==> { mode: 'development', command: 'serve', ssrBuild: false }
-	// process.cwd() => D:\github\awesome-vite-vue3-ts
+	// dev ==> { mode: 'development', command: 'serve', ssrBuild: false }
+	// build ==> mode { mode: 'production', command: 'build', ssrBuild: false }
 	return {
 		lintOnSave: false,
 		plugins: [
 			vue(),
-			ElementPlus()
+			ElementPlus(),
+			viteConfitExtend({
+				indexPath:'templates',
+				indexName: 'index.html',
+			}),
 		],
 		root: process.cwd(),
 		resolve: { alias },
@@ -53,7 +58,6 @@ export default defineConfig((mode) => {
 			cors: true, // 默认启用并允许任何源
 			//https.createServer()配置项
 			https: false,
-
 			proxy: {
 				// [env.VITE_APP_BASE_API]: {
 				// 	target: `http://${env.VITE_APP_BASE_IP}:8088`, // release
@@ -83,66 +87,28 @@ export default defineConfig((mode) => {
 				'/socket.io': {
 					target: env.VITE_SOCKET_URL, // 代理的目标地址
 					changeOrigin: true,
-				},
-
-				// '/gitee': {
-				// 	target: 'https://gitee.com',
-				// 	ws: true,
-				// 	changeOrigin: true,
-				// 	rewrite: (path) => path.replace(/^\/gitee/, ''),
-				// },
+				}
 			},
 
-			//反向代理配置，注意rewrite写法，开始没看文档在这里踩了坑
-			// proxy: {
-			// 	// 匹配请求路径，localhost:3000/snow
-			// 	'/api': {
-			// 		target: 'http://127.0.0.1:9000', // 代理的目标地址
-			// 		// secure: true, // 是否https接口
-			// 		ws: true,// 是否代理websockets
-			// 		changeOrigin: true,
-			// 		//rewrite: (path) => path.replace(/^\/api/, '') // 路径重写，rewrite target目标地址 + '/api'，如果接口是这样的，那么不用重写
-			// 	},
-			// 	'/resStatic': {
-			// 		target: 'http://127.0.0.1:9000/', // 代理的目标地址
-			// 		// secure: true, // 是否https接口
-			// 		// ws: true,// 是否代理websockets
-			// 		changeOrigin: true,
-			// 		// 路径重写
-			// 		rewrite: (path) => path.replace(/^\/resStatic/, '')
-			// 	}
-			// },
 		},
 
   		// 打包配置
 		build: {
 			outDir: 'dist', //指定输出路径
 			minify: 'terser', // 混淆器，terser构建后文件体积更小
-			sourcemap: false,
+			sourcemap: false, // 是否生成sourceMap
 			chunkSizeWarningLimit: 1500, // 分块打包，分解块，将大块分解成更小的块
 			rollupOptions: {
 				output: {
-					entryFileNames: `assets/[name].${new Date().getTime()}.js`,
-					chunkFileNames: `assets/[name].${new Date().getTime()}.js`,
-					assetFileNames: `assets/[name].${new Date().getTime()}.[ext]`,
+					//dir: "dist/templates/index.html",
+					entryFileNames: `static/assets/[name].${new Date().getTime()}.js`,
+					chunkFileNames: `static/assets/[name].${new Date().getTime()}.js`,
+					assetFileNames: `static/assets/[name].${new Date().getTime()}.[ext]`,
 					compact: true,
 					manualChunks: {
 						vue: ['vue', 'vue-router', 'pinia'],
-						//echarts: ['echarts'],
-					},
-
-					// manualChunks(id) {
-					// 	if (id.includes("node_modules")) {
-					// 	  return id
-					// 		.toString()
-					// 		.split("node_modules/")[1]
-					// 		.split("/")[0]
-					// 		.toString();
-					// 	}
-					// },
-
-
-
+						echarts: ['echarts'],
+					}
 				},
 			},
 		},
