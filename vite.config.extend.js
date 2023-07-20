@@ -2,12 +2,12 @@ import fs from "node:fs"
 import path from "node:path"
 
 export default function viteConfitExtend(options) {
-	let _config;
-	const _options = options;
+	let _config
+	const _options = options
 	return {
 		name: "index-path-extend",
 		configResolved(config) {
-			_config = config;
+			_config = config
 		},
 		closeBundle() {
 			if (_config.command == "build" && _options) {
@@ -27,9 +27,9 @@ export default function viteConfitExtend(options) {
 					}
 					fs.renameSync(
 						path.resolve(_config.root, _config.build.outDir, "index.html"),
-						path.resolve(_config.root, _config.build.outDir, _options.indexPath, _options.indexName,)
+						path.resolve(_config.root, _config.build.outDir, _options.indexPath, _options.indexName)
 					)
-					console.log(`项目构建完成，index.html已移动到 ${_options.indexPath} 下`);
+					console.log(`项目构建完成，index.html已成功移至${_options.indexPath}`)
 				}
 			}
 		},

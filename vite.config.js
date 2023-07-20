@@ -100,7 +100,6 @@ export default defineConfig((mode) => {
 			chunkSizeWarningLimit: 1500, // 分块打包，分解块，将大块分解成更小的块
 			rollupOptions: {
 				output: {
-					//dir: "dist/templates/index.html",
 					entryFileNames: `static/assets/[name].${new Date().getTime()}.js`,
 					chunkFileNames: `static/assets/[name].${new Date().getTime()}.js`,
 					assetFileNames: `static/assets/[name].${new Date().getTime()}.[ext]`,

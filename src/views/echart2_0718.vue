@@ -1,6 +1,9 @@
 <template>
 	 <div class="p20">
 
+    <el-button type="primary" @click="getData()">getData</el-button>
+
+
     <div id="peiBox" style="width: 100%; height: 300px; background-color: #dedede; margin-bottom: 20px; margin-top: 20px;">
 
       <div class="clx">
@@ -165,11 +168,7 @@ const getData = ()=>{
 }
 
 // 鼠标是否在折线上
-// const isHover = ref(false)
-
-// 鼠标滑动过程中的折线 step
-const hoverStep = ref(null)
-
+const isHover = ref(false)
 
 // 这是2个复选框
 const checkedCXL = ref(false)
@@ -193,31 +192,10 @@ const defaultState = {
 // 计算属性 表盘上的cxl值
 const cxlState = computed(() => {
   let val = defaultState
-  if(!!hoverStep.value){
-    // 鼠标在折线上  hoverStep == step
-    if(!checkedCXL.value){
-      // cxl 未勾选 则显示 online 数据
-      if(cxl_online.value.length >= step.value ){
-        // 当cxl_online的长度大于step 则显示第 step 的数据
-        val = cxl_online.value[step.value  -1]
-      }else{
-        // 否则显示最后一个数据
-        val = cxl_online.value.at(-1)
-      }
-    }else{
-      // cxl 勾选 则显示 history 数据
-      if(cxl_history.value.length >= step.value ){
-        // 当cxl_history的长度大于step 则显示第 step 的数据
-        val = cxl_history.value[step.value -1]
-      }else{
-        // 否则显示最后一个数据
-        val = cxl_history.value.at(-1)
-      }
-    }
-    return val
-  }
-  
-  if(!checkedCXL.value){
+  if(!!isHover.value){
+    // 鼠标在折线上 
+
+  }else if(!checkedCXL.value){
     // cxl 未勾选 则显示 online 数据
     if(cxl_online.value.length > 0 ){
       val = cxl_online.value.at(-1)
@@ -231,14 +209,14 @@ const cxlState = computed(() => {
 
 // 获取 step 
 const step = computed(()=>{
-  return hoverStep.value || cxlState.value?.STEP || 0
+  return cxlState.value?.STEP || 0
 })
 
 // 监听 step 判断是否新的迭代开始
 watch(
   ()=> step.value,
   (newVal, oldVal) => {
-    if(newVal < oldVal && !hoverStep.value){
+    if(newVal < oldVal){
       // 重新开始后，重新获取一次历史数据
       console.log("new loop...")
       getHistoryData()
@@ -246,22 +224,26 @@ watch(
   }
 )
 
+
 // 计算属性 表盘上的disk值
 const diskState = computed(() => {
-  let val = defaultState
-  // disk 未勾选 则显示 defaultState
-  if(!checkedDisk.value) return val
 
-  if(!!hoverStep.value){
-    // 鼠标在折线上 hoverStep == step
-    val = disk_history.value[step.value  -1]
-  }else if(disk_history.value.length > 0 && disk_history.value.length >= step.value){
-    // 当数组长度大于 step 则显示第 step 个
-    val = disk_history.value[step.value  -1 ]
-  }else if(disk_history.value.length < step.value) {
-    // 当数组长度小于 step 则显示最后一个
-    val = disk_history.value.at(-1)
+  let val = defaultState
+  if(!!isHover.value){
+    // 鼠标在折线上 
+
+
+  }else if(!!checkedDisk.value){
+    // disk 勾选 则显示 history 数据的历史数据
+    if(disk_history.value.length > 0 && disk_history.value.length > step.value){
+      // 当数组长度大于 step 则显示第 step 个
+      val = disk_history.value[step.value]
+    }else if(disk_history.value.length < step.value) {
+      // 当数组长度小于 step 则显示最后一个
+      val = disk_history.value.at(-1)
+    }
   }
+
   return val
 })
 
@@ -339,22 +321,9 @@ const initLineChart = ()=>{
   )
 
   if (option && typeof option === 'object') {
-    lineChart.value.setOption(option)
+    lineChart.value.setOption(option);
   }
-  window.addEventListener('resize', lineChart.value.resize)
-
-  // 鼠标离开折线区域重置hoverStep
-  dom.onmouseout = ()=> {
-    hoverStep.value = null
-  } 
-
-  // update Axis Pointer
-  lineChart.value.on('updateAxisPointer', (event)=> {
-    const xAxisInfo = event.axesInfo[0];
-    if (xAxisInfo) {
-      hoverStep.value = xAxisInfo.value + 1;
-    }
-  })
+  window.addEventListener('resize', lineChart.value.resize);
 }
 
 // 折线显示了数据类型 默认 GPU%
@@ -431,6 +400,7 @@ watch(
     lineChart.value.setOption(option)
   }
 )
+
 
 onMounted(() => {
   getData() //获取数据
