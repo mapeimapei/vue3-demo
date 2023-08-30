@@ -66,6 +66,26 @@ export const staticRoutes = [
 	},
 
 	{
+		path: '/lines',
+		meta: {
+			title: 'lines',
+		},
+		name: "lines",
+		component: () => import('@/views/lines.vue'),
+	},
+
+	{
+		path: '/lines2',
+		meta: {
+			title: 'lines2',
+		},
+		name: "lines2",
+		component: () => import('@/views/lines2.vue'),
+	},
+
+
+
+	{
 		path: "/:catchAll(.*)", // 不识别的path自动匹配404
 		redirect: '/index'
 	}

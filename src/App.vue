@@ -15,13 +15,13 @@ const { proxy } = getCurrentInstance()
 onMounted(() => {
 	nextTick(() => {
 		// 刷新页面 重新连接 socket
-		mySocketio.init(proxy)
+		//mySocketio.init(proxy)
 	});
 });
 // 页面销毁时，关闭监听布局配置/i18n监听
 onUnmounted(() => {
 	// 关闭 socket
-	mySocketio.close(proxy)
+	//mySocketio.close(proxy)
 
 });
 
