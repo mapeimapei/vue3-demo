@@ -20,14 +20,14 @@ const socketEvents = {
 const vueSocketOptions = {
     debug: false,
     connection: io(
-        import.meta.env.VITE_BASE_URL,  //http:自己的服务：端口
+        import.meta.env.VITE_SOCKET_URL,  //http:自己的服务：端口
         {
             transports: ['polling'],
             autoConnect: false,
             reconnection: true,
             reconnectionDelayMax:1000,
             reconnectionAttempts: 5, // 重连次数
-            forceNew: true
+            // forceNew: true
         }
     ),
     // extraHeaders: {"Access-Control-Allow-Origin": '*'},

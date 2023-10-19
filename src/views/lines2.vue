@@ -52,12 +52,16 @@ const getLines = () => {
     symbol: ['none', 'none'],
     polyline: true,
     silent: true,
-    effect: {
-      symbol: 'arrow',
-      show: true,
-      period: 7, // 箭头指向速度，值越小速度越快
-      trailLength: 0.01, // 特效尾迹长度[0,1]值越大，尾迹越长重
-      symbolSize: 5, // 图标大小
+    effect: { // https://echarts.apache.org/zh/option.html#series-lines.effect.loop
+      symbol:'arrow', //'circle', 'rect', 'roundRect', 'triangle', 'diamond', 'pin', 'arrow', 'none' 可以通过 'image://url' 设置为图片，其中 URL 为图片的链接，或者 dataURI。
+      show: true, //是否显示特效
+      period: 5, // 特效动画的时间，单位为 s。
+      trailLength: 0.2, // 特效尾迹的长度。取从 0 到 1 的值，数值越大尾迹越长。
+      symbolSize: 5, // 特效标记的大小，可以设置成诸如 10 这样单一的数字，也可以用数组分开表示高和宽，例如 [20, 10] 表示标记宽为20，高为10。
+      loop: false, // 是否循环显示特效
+      delay:0, // 特效动画的延时，支持设置成数字或者回调。单位ms 。。。多个线条之间的等待时间
+      color:"#a50000", // 特效标记的颜色，默认取 lineStyle.color。
+    
     },
     lineStyle: {
       width: 1,
